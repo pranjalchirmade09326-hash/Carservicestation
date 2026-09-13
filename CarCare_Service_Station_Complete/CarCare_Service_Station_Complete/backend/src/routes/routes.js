@@ -16,15 +16,15 @@ router.post('/services', protect, authorize('admin', 'super_admin'), service.cre
 router.put('/services/:id', protect, authorize('admin', 'super_admin'), service.update);
 router.delete('/services/:id', protect, authorize('admin', 'super_admin'), service.remove);
 
-router.get('/vehicles', protect, authorize('user'), vehicle.list);
-router.post('/vehicles', protect, authorize('user'), vehicle.create);
-router.put('/vehicles/:id', protect, authorize('user', 'admin', 'super_admin'), vehicle.update);
-router.delete('/vehicles/:id', protect, authorize('user', 'admin', 'super_admin'), vehicle.remove);
+router.get('/vehicles', protect, vehicle.list);
+router.post('/vehicles', protect, vehicle.create);
+router.put('/vehicles/:id', protect, vehicle.update);
+router.delete('/vehicles/:id', protect, vehicle.remove);
 
-router.post('/bookings', protect, authorize('user'), booking.create);
-router.get('/bookings/my', protect, authorize('user'), booking.mine);
-router.put('/bookings/:id', protect, authorize('user'), booking.updateMine);
-router.delete('/bookings/:id', protect, authorize('user'), booking.removeMine);
+router.post('/bookings', protect, booking.create);
+router.get('/bookings/my', protect, booking.mine);
+router.put('/bookings/:id', protect, booking.updateMine);
+router.delete('/bookings/:id', protect, booking.removeMine);
 
 router.get('/admin/dashboard', protect, authorize('admin', 'super_admin'), admin.dashboard);
 router.get('/admin/bookings', protect, authorize('admin', 'super_admin'), booking.all);

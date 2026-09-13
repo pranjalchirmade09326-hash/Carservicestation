@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { pool } = require('../config/db');
 
 async function protect(req, res, next) {
   try {
@@ -10,7 +10,8 @@ async function protect(req, res, next) {
 
     const token = header.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id);
+    const [rows] = await pool.query('SELECT id, name, email, role, phone FROM users WHERE id = ?', [decoded.id]);
+    const user = rows[0];
 
     if (!user) return res.status(401).json({ message: 'User no longer exists' });
     req.user = user;

@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const { pool } = require('../config/db');
 
 function makeToken(user) {
   return jwt.sign(
@@ -11,9 +11,8 @@ function makeToken(user) {
 }
 
 function safeUser(user) {
-  const data = user.toJSON();
-  delete data.password;
-  return data;
+  const { password, ...rest } = user;
+  return rest;
 }
 
 async function register(req, res, next) {
@@ -27,13 +26,19 @@ async function register(req, res, next) {
       return res.status(400).json({ message: 'Password must contain at least 8 characters' });
     }
 
-    const exists = await User.findOne({ where: { email } });
-    if (exists) return res.status(409).json({ message: 'Email already registered' });
+    const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
 
     const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      name, email, password: hash, phone, role: 'user'
-    });
+    const [result] = await pool.query(
+      'INSERT INTO users (name, email, password, phone, role, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
+      [name, email, hash, phone || null, 'user']
+    );
+
+    const [rows] = await pool.query('SELECT id, name, email, role, phone, createdAt, updatedAt FROM users WHERE id = ?', [result.insertId]);
+    const user = rows[0];
 
     res.status(201).json({
       message: 'Registration successful',
@@ -48,7 +53,12 @@ async function register(req, res, next) {
 async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = rows[0];
 
     if (!user || !(await bcrypt.compare(password || '', user.password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
