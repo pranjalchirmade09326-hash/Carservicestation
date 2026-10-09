@@ -33,4 +33,15 @@ router.get('/admin/users', protect, authorize('admin', 'super_admin'), admin.use
 
 router.delete('/super-admin/users/:id', protect, authorize('super_admin'), admin.deleteUser);
 
+// Database seed endpoint for initializing users and 10 mock services
+router.get('/seed', async (req, res, next) => {
+  try {
+    const { seedDB } = require('../config/db');
+    const result = await seedDB();
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

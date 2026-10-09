@@ -128,6 +128,90 @@ function Navbar({ user, onLogout }) {
   );
 }
 
+// 10 mock dummy services for comprehensive car care station
+export const MOCK_SERVICES = [
+  {
+    id: 1,
+    name: 'Periodic Maintenance Service (Basic)',
+    description: 'Comprehensive 40-point vehicle inspection, fluid top-up, wiper check, and spark plug cleaning.',
+    price: 1999,
+    durationMinutes: 90,
+    isActive: 1
+  },
+  {
+    id: 2,
+    name: 'Standard Service & Oil Flush',
+    description: 'Engine oil change, oil filter replacement, air filter cleaning, and brake inspection.',
+    price: 2999,
+    durationMinutes: 120,
+    isActive: 1
+  },
+  {
+    id: 3,
+    name: 'Comprehensive Major Service',
+    description: 'Full synthetic oil replacement, oil filter, air filter, fuel filter, spark plugs, coolant flush, and wheel inspection.',
+    price: 4999,
+    durationMinutes: 180,
+    isActive: 1
+  },
+  {
+    id: 4,
+    name: 'Complete AC Deep Clean & Gas Refill',
+    description: 'AC cabin filter replacement, evaporator coil antibacterial spray, condenser wash, and R134a refrigerant gas top-up.',
+    price: 1899,
+    durationMinutes: 75,
+    isActive: 1
+  },
+  {
+    id: 5,
+    name: 'Computerized 3D Wheel Alignment & Balancing',
+    description: 'High-precision laser alignment for all 4 wheels, automated dynamic wheel balancing, and tyre rotation.',
+    price: 899,
+    durationMinutes: 45,
+    isActive: 1
+  },
+  {
+    id: 6,
+    name: 'Brake Overhaul & Pad Replacement',
+    description: 'Front & rear brake pad wear inspection, disc rotor skimming/polishing, brake fluid bleeding, and caliper greasing.',
+    price: 1499,
+    durationMinutes: 60,
+    isActive: 1
+  },
+  {
+    id: 7,
+    name: 'Premium Foam Wash & Interior Detailing',
+    description: 'pH-neutral high-pressure snow foam wash, interior vacuuming, dashboard UV dressing, and upholstery steam sanitation.',
+    price: 2199,
+    durationMinutes: 120,
+    isActive: 1
+  },
+  {
+    id: 8,
+    name: 'Battery Health Diagnostics & Terminals Service',
+    description: 'Digital CCA battery load testing, alternator charging rate verification, and anti-corrosion terminal treatment.',
+    price: 499,
+    durationMinutes: 30,
+    isActive: 1
+  },
+  {
+    id: 9,
+    name: 'Suspension & Steering Overhaul',
+    description: 'Front & rear shock absorbers check, tie-rod end and ball joint inspection, bushing lubrication, and road test.',
+    price: 2599,
+    durationMinutes: 110,
+    isActive: 1
+  },
+  {
+    id: 10,
+    name: 'Ceramic Paint Protection & Glass Coating',
+    description: '3-step paint correction rubbing & polishing followed by 9H nano ceramic protective hydrophobic coat.',
+    price: 5999,
+    durationMinutes: 240,
+    isActive: 1
+  }
+];
+
 // home page showing service packages
 function Home({ user }) {
   const navigate = useNavigate();
@@ -135,14 +219,16 @@ function Home({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // load services from backend
+  // load services from backend with mock fallback
   useEffect(() => {
     api.get('/services')
       .then(res => {
-        setServices(res.data.services || []);
+        const loaded = res.data.services || [];
+        setServices(loaded.length > 0 ? loaded : MOCK_SERVICES);
       })
       .catch(err => {
-        console.error('Error loading services:', err);
+        console.warn('Backend services request failed, fallback to 10 mock services:', err);
+        setServices(MOCK_SERVICES);
       })
       .finally(() => {
         setLoading(false);
@@ -371,8 +457,11 @@ function Register({ setUser }) {
       const res = await api.post('/auth/register', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      navigate('/');
+      if (res.data.user.role === 'admin' || res.data.user.role === 'super_admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -429,7 +518,7 @@ function Register({ setUser }) {
           />
         </div>
 
-        <div className="form-group" style={{ marginBottom: 20 }}>
+        <div className="form-group" style={{ marginBottom: 12 }}>
           <label>Phone Number</label>
           <input
             type="tel"
@@ -438,6 +527,18 @@ function Register({ setUser }) {
             value={formData.phone}
             onChange={e => setFormData({ ...formData, phone: e.target.value })}
           />
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 20 }}>
+          <label>Account Type / Role</label>
+          <select
+            className="form-control"
+            value={formData.role || 'user'}
+            onChange={e => setFormData({ ...formData, role: e.target.value })}
+          >
+            <option value="user">Customer (Standard User)</option>
+            <option value="admin">Service Center Admin (Admin Role)</option>
+          </select>
         </div>
 
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
@@ -676,8 +777,9 @@ function Bookings({ user }) {
     ])
       .then(([bookingsRes, servicesRes, vehiclesRes]) => {
         setBookings(bookingsRes.data || []);
-        const activeServices = (servicesRes.data.services || []).filter(s => s.isActive);
-        setServices(activeServices);
+        const activeServices = (servicesRes.data?.services || []).filter(s => s.isActive);
+        const resolvedServices = activeServices.length > 0 ? activeServices : MOCK_SERVICES;
+        setServices(resolvedServices);
         const myCars = vehiclesRes.data || [];
         setVehicles(myCars);
 
@@ -685,7 +787,7 @@ function Bookings({ user }) {
         setForm(prev => ({
           ...prev,
           vehicleId: prev.vehicleId || (myCars[0]?.id ? String(myCars[0].id) : ''),
-          serviceId: prev.serviceId || (activeServices[0]?.id ? String(activeServices[0].id) : '')
+          serviceId: prev.serviceId || (resolvedServices[0]?.id ? String(resolvedServices[0].id) : '')
         }));
       })
       .catch(err => {
