@@ -4,9 +4,14 @@ import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-do
 import axios from 'axios';
 import './style.css';
 
-// axios instance with backend base url
+// compute backend base url from environment variable or fallback to localhost
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const baseURL = rawApiUrl.endsWith('/api')
+  ? rawApiUrl
+  : `${rawApiUrl.replace(/\/$/, '')}/api`;
+
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api'
+  baseURL
 });
 
 // attach jwt token to request headers if logged in
