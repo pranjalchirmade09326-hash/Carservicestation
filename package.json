@@ -1,0 +1,8 @@
+{
+  "name": "carservicestation",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix CarCare_Service_Station_Complete/CarCare_Service_Station_Complete/frontend install && npm --prefix CarCare_Service_Station_Complete/CarCare_Service_Station_Complete/frontend run build && node -e \"require('fs').cpSync('CarCare_Service_Station_Complete/CarCare_Service_Station_Complete/frontend/dist', 'dist', { recursive: true })\""
+  }
+}
