@@ -33,14 +33,10 @@ async function register(req, res, next) {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
-    const assignedRole = (req.body.role === 'admin' || req.body.role === 'super_admin' || req.body.adminCode === 'ADMIN123' || email.toLowerCase().startsWith('admin@')) 
-      ? (req.body.role || 'admin') 
-      : 'user';
-
     const hash = await bcrypt.hash(password, 10);
     const [result] = await pool.query(
       'INSERT INTO users (name, email, password, phone, role, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-      [name, email, hash, phone || null, assignedRole]
+      [name, email, hash, phone || null, 'user']
     );
 
     const [rows] = await pool.query('SELECT id, name, email, role, phone, createdAt, updatedAt FROM users WHERE id = ?', [result.insertId]);

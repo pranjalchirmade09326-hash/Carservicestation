@@ -457,11 +457,8 @@ function Register({ setUser }) {
       const res = await api.post('/auth/register', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      if (res.data.user.role === 'admin' || res.data.user.role === 'super_admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+      setUser(res.data.user);
+      navigate('/');
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -518,7 +515,7 @@ function Register({ setUser }) {
           />
         </div>
 
-        <div className="form-group" style={{ marginBottom: 12 }}>
+        <div className="form-group" style={{ marginBottom: 20 }}>
           <label>Phone Number</label>
           <input
             type="tel"
@@ -527,18 +524,6 @@ function Register({ setUser }) {
             value={formData.phone}
             onChange={e => setFormData({ ...formData, phone: e.target.value })}
           />
-        </div>
-
-        <div className="form-group" style={{ marginBottom: 20 }}>
-          <label>Account Type / Role</label>
-          <select
-            className="form-control"
-            value={formData.role || 'user'}
-            onChange={e => setFormData({ ...formData, role: e.target.value })}
-          >
-            <option value="user">Customer (Standard User)</option>
-            <option value="admin">Service Center Admin (Admin Role)</option>
-          </select>
         </div>
 
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
