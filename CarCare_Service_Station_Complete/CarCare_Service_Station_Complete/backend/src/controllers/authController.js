@@ -2,10 +2,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here';
+
 function makeToken(user) {
   return jwt.sign(
     { id: user.id, role: user.role },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     { expiresIn: '1d' }
   );
 }

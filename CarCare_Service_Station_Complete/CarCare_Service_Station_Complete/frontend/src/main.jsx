@@ -262,7 +262,11 @@ function Login({ setUser }) {
         navigate('/admin');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check credentials.');
+      setError(
+        err.response?.data?.message ||
+        (err.message === 'Network Error' ? 'Server connection failed (CORS or server offline).' : err.message) ||
+        'Login failed. Please check credentials.'
+      );
     } finally {
       setLoading(false);
     }
@@ -370,7 +374,11 @@ function Register({ setUser }) {
       setUser(res.data.user);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed.');
+      setError(
+        err.response?.data?.message ||
+        (err.message === 'Network Error' ? 'Server connection failed (CORS or server offline).' : err.message) ||
+        'Registration failed.'
+      );
     } finally {
       setLoading(false);
     }

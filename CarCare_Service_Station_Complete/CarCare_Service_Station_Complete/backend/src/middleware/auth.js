@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_here';
+
 async function protect(req, res, next) {
   try {
     const header = req.headers.authorization;
@@ -9,7 +11,7 @@ async function protect(req, res, next) {
     }
 
     const token = header.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     const [rows] = await pool.query('SELECT id, name, email, role, phone FROM users WHERE id = ?', [decoded.id]);
     const user = rows[0];
 
