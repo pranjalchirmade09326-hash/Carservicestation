@@ -20,9 +20,23 @@ async function list(req, res, next) {
     dataSql += ' ORDER BY name ASC LIMIT ? OFFSET ?';
 
     const [countRows] = await pool.query(countSql, params);
-    const total = countRows[0].total;
+    let total = countRows[0].total;
 
-    const [rows] = await pool.query(dataSql, [...params, safeLimit, offset]);
+    let [rows] = await pool.query(dataSql, [...params, safeLimit, offset]);
+
+    // If no services exist in database, auto-seed and reload
+    if (total === 0 && !search) {
+      try {
+        const { seedDB } = require('../config/db');
+        await seedDB();
+        const [reCount] = await pool.query(countSql, params);
+        total = reCount[0].total;
+        const [reRows] = await pool.query(dataSql, [...params, safeLimit, offset]);
+        rows = reRows;
+      } catch (seedErr) {
+        console.error('Auto-seed in serviceController failed:', seedErr.message);
+      }
+    }
 
     res.json({
       services: rows,

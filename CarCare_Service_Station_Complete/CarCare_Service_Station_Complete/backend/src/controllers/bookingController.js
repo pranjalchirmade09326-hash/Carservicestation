@@ -61,8 +61,19 @@ async function create(req, res, next) {
       return res.status(400).json({ message: 'Invalid vehicle' });
     }
 
-    const [sRows] = await pool.query('SELECT * FROM services WHERE id = ?', [serviceId]);
-    const service = sRows[0];
+    let [sRows] = await pool.query('SELECT * FROM services WHERE id = ?', [serviceId]);
+    let service = sRows[0];
+    if (!service || !service.isActive) {
+      try {
+        const { seedDB } = require('../config/db');
+        await seedDB();
+        const [recheckRows] = await pool.query('SELECT * FROM services WHERE id = ?', [serviceId]);
+        service = recheckRows[0];
+      } catch (seedErr) {
+        console.error('Auto-seed in create booking failed:', seedErr.message);
+      }
+    }
+
     if (!service || !service.isActive) {
       return res.status(400).json({ message: 'Invalid or inactive service' });
     }
